@@ -1,0 +1,12 @@
+
+This graph will seen better if you use:
+
+# Inside/Internet in boxes
+$ ./network.py > network.dot
+$ dot -Tpng network.dot > network.png
+
+# Symetric view, no parents organisation
+$ ./network.py > network.dot
+$ neato -Tpng network.dot > network.png
+
+
