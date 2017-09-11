@@ -271,7 +271,7 @@ class GvGen:
     def propertiesAsStringGet(self, node, props):
         """
         Get the properties string according to parent/children
-        props is the properties dictionnary
+        props is the properties dictionary
         """
 
         allProps = {}
