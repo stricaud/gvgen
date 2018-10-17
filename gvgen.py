@@ -19,6 +19,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 """
 
+from __future__ import print_function
+from six import iteritems
 from sys import stdout
 
 gvgen_version = "0.9.1"
@@ -65,7 +67,7 @@ class GvGen:
             self.legend = self.newItem(legend_name)
 
     def setOptions(self, **options):
-        for key, value in options.iteritems():
+        for key, value in iteritems(options):
             self.options[key] = value
 
     def __node_new(self, name, parent=None, distinct=None):
@@ -217,7 +219,7 @@ class GvGen:
 
     def debug(self):
         for e in self.__nodes:
-            print "element = " + str(e['id'])
+            print ("element = {0}".format(e['id']))
 
     def collectLeaves(self, parent):
         """
@@ -296,11 +298,11 @@ class GvGen:
         allProps.update(props)
 
         if self.__has_children(node):
-            propStringList = ["%s=\"%s\";\n" % (k, v) for k, v in allProps.iteritems()]
+            propStringList = ["%s=\"%s\";\n" % (k, v) for k, v in iteritems(allProps)]
             properties = ''.join(propStringList)
         else:
             if props:
-                propStringList = ["%s=\"%s\"" % (k, v) for k, v in allProps.iteritems()]
+                propStringList = ["%s=\"%s\"" % (k, v) for k, v in iteritems(allProps)]
                 properties = '[' + ','.join(propStringList) + ']'
             else:
                 properties = ''
@@ -320,7 +322,7 @@ class GvGen:
 
         properties = ''
         if props:
-            properties += ','.join(["%s=\"%s\"" % (str(k),str(val)) for k, val in props.iteritems()])
+            properties += ','.join(["%s=\"%s\"" % (str(k),str(val)) for k, val in iteritems(props)])
         return properties
 
     def propertyForeachLinksAppend(self, node, key, val):
@@ -374,16 +376,18 @@ class GvGen:
             style = self.newItem("", self.legend)
             descr = self.newItem(legenddescr, self.legend)
             self.styleApply(legendstyle, style)
-            link = self.newLink(style,descr)
+            link = self.newLink(style, descr)
             self.propertyAppend(link, "dir", "none")
             self.propertyAppend(link, "style", "invis")
-            self.propertyAppend(descr,"shape","plaintext")
+            self.propertyAppend(descr, "shape", "plaintext")
 
     def tree_debug(self, level, node, children):
         if children:
-            print "(level:%d) Eid:%d has children (%s)" % (level,node['id'],str(children))
+            print("(level:{0}) Eid:{1} has children ({2})").format(
+                level, node['id'], str(children)
+            )
         else:
-            print "Eid:"+str(node['id'])+" has no children"
+            print("Eid: {0} has no children".format(str(node['id'])))
 
     #
     # Core function that outputs the data structure tree into dot language
@@ -394,11 +398,11 @@ class GvGen:
         and do it in the right order
         """
         if debug:
-            print "/* Grabed node = %s*/" % str(node['id'])
+            print("/* Grabed node = {0}*/".format(str(node['id'])))
 
         if node['lock'] == 1:            # The node is locked, nothing should be printed
             if debug:
-                print "/* The node (%s) is locked */" % str(node['id'])
+                print("/* The node ({0}) is locked */".format(str(node['id'])))
 
             if self.__opened_braces:
                 self.fd.write(level * self.padding_str)
@@ -436,14 +440,16 @@ class GvGen:
                     last_cluster_str = str(last_cluster['id'])
                 else:
                     last_cluster_str = 'None'
-                print "/* e[parent] = %s, last_cluster = %s, last_level = %d, opened_braces: %s */" % (parent_str, last_cluster_str,last_level,str(self.__opened_braces))
+                print("/* e[parent] = {0}, last_cluster = {1}, last_level = {2}, opened_braces: {3} */".format(
+                    parent_str, last_cluster_str,last_level,str(self.__opened_braces)
+                )) # NOQA
 
             # Write children/parent with properties
             if node['parent']:
                 if node['parent'] != last_cluster:
-                    while node['parent'] < last_cluster:
-                        last_cluster,last_level =  self.__opened_braces[-1]
-                        if  node['parent'] == last_cluster:
+                    while last_cluster and node['parent'] < last_cluster:
+                        last_cluster, last_level = self.__opened_braces[-1]
+                        if node['parent'] == last_cluster:
                             last_level += 1
                             # We browse any property to build a string
                             self.fd.write(last_level * self.padding_str)
@@ -552,7 +558,7 @@ class GvGen:
             self.fd.write("digraph G {\n")
 
             if self.options:
-                for key, value in self.options.iteritems():
+                for key, value in iteritems(self.options):
                     self.fd.write("%s=%s;" % (key, value))
                 self.fd.write("\n")
 
