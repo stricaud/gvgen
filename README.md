@@ -8,6 +8,7 @@ GvGen is a python class to generate dot files that you can use with [Graphviz][g
 * Apply any graphviz property on the fly
 * Apply graphviz properties to a style
 * Add a legend to your graph easily 
+* Python 2/3 compatible
 
 ### Examples
 
