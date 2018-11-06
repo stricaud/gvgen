@@ -19,6 +19,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 """
 
+from __future__ import print_function
+from six import iteritems
 from sys import stdout
 
 gvgen_version = "0.9.1"
@@ -53,8 +55,8 @@ class GvGen:
         self.__links = []
         self.__browse_level = 0                  # Stupid depth level for self.browse
         self.__opened_braces = []                # We count opened clusters
-        self.fd=stdout                           # File descriptor to output dot
-        self.padding_str="   "                   # Left padding to make children and parent look nice
+        self.fd = stdout                           # File descriptor to output dot
+        self.padding_str = "   "                   # Left padding to make children and parent look nice
         self.__styles = {}
         self.__default_style = []
         self.smart_mode = 0                      # Disabled by default
@@ -65,7 +67,7 @@ class GvGen:
             self.legend = self.newItem(legend_name)
 
     def setOptions(self, **options):
-        for key, value in options.iteritems():
+        for key, value in iteritems(options):
             self.options[key] = value
 
     def __node_new(self, name, parent=None, distinct=None):
@@ -92,10 +94,10 @@ class GvGen:
         node = {'id': self.__id,        # Internal ID
                 'lock': 0,              # When the node is written, it is locked to avoid further references
                 'parent': parent,       # Node parent for easy graphviz clusters
-                'style':None,           # Style that GvGen allow you to create
+                'style': None,          # Style that GvGen allow you to create
                 'properties': {         # Custom graphviz properties you can add, which will overide previously defined styles
                        'label': name
-                       }
+                   }
                 }
 
         # Parents should be sorted first
@@ -144,8 +146,7 @@ class GvGen:
         if not linkfrom:
             self.__links.append(link)
 
-
-    def __link_new(self, from_node, to_node, label = None, cl_from_node=None, cl_to_node=None):
+    def __link_new(self, from_node, to_node, label=None, cl_from_node=None, cl_to_node=None):
         """
         Creates a link between two nodes
         @from_node: The node the link comes from
@@ -156,10 +157,10 @@ class GvGen:
 
         link = {'from_node': from_node,
                 'to_node': to_node,
-                'style':None,             # Style that GvGen allow you to create
+                'style': None,             # Style that GvGen allow you to create
                 'properties': {},         # Custom graphviz properties you can add, which will overide previously defined styles
-                'cl_from_node':None,      # When linking from a cluster, the link appears from this node
-                'cl_to_node':None,        # When linking to a cluster, the link appears to go to this node
+                'cl_from_node': None,      # When linking from a cluster, the link appears from this node
+                'cl_to_node': None,        # When linking to a cluster, the link appears to go to this node
                 }
 
         if label:
@@ -190,7 +191,6 @@ class GvGen:
 
         return None
 
-
     def __has_children(self, parent):
         """
         Find children to a given parent
@@ -217,7 +217,7 @@ class GvGen:
 
     def debug(self):
         for e in self.__nodes:
-            print "element = " + str(e['id'])
+            print("element = {0}".format(e['id']))
 
     def collectLeaves(self, parent):
         """
@@ -296,11 +296,11 @@ class GvGen:
         allProps.update(props)
 
         if self.__has_children(node):
-            propStringList = ["%s=\"%s\";\n" % (k, v) for k, v in allProps.iteritems()]
+            propStringList = ["%s=\"%s\";\n" % (k, v) for k, v in iteritems(allProps)]
             properties = ''.join(propStringList)
         else:
             if props:
-                propStringList = ["%s=\"%s\"" % (k, v) for k, v in allProps.iteritems()]
+                propStringList = ["%s=\"%s\"" % (k, v) for k, v in iteritems(allProps)]
                 properties = '[' + ','.join(propStringList) + ']'
             else:
                 properties = ''
@@ -320,7 +320,7 @@ class GvGen:
 
         properties = ''
         if props:
-            properties += ','.join(["%s=\"%s\"" % (str(k),str(val)) for k, val in props.iteritems()])
+            properties += ','.join(["%s=\"%s\"" % (str(k),str(val)) for k, val in iteritems(props)])
         return properties
 
     def propertyForeachLinksAppend(self, node, key, val):
@@ -374,16 +374,18 @@ class GvGen:
             style = self.newItem("", self.legend)
             descr = self.newItem(legenddescr, self.legend)
             self.styleApply(legendstyle, style)
-            link = self.newLink(style,descr)
+            link = self.newLink(style, descr)
             self.propertyAppend(link, "dir", "none")
             self.propertyAppend(link, "style", "invis")
-            self.propertyAppend(descr,"shape","plaintext")
+            self.propertyAppend(descr, "shape", "plaintext")
 
     def tree_debug(self, level, node, children):
         if children:
-            print "(level:%d) Eid:%d has children (%s)" % (level,node['id'],str(children))
+            print("(level:{0}) Eid:{1} has children ({2})").format(
+                level, node['id'], str(children)
+            )
         else:
-            print "Eid:"+str(node['id'])+" has no children"
+            print("Eid: {0} has no children".format(str(node['id'])))
 
     #
     # Core function that outputs the data structure tree into dot language
@@ -394,11 +396,11 @@ class GvGen:
         and do it in the right order
         """
         if debug:
-            print "/* Grabed node = %s*/" % str(node['id'])
+            print("/* Grabed node = {0}*/".format(str(node['id'])))
 
         if node['lock'] == 1:            # The node is locked, nothing should be printed
             if debug:
-                print "/* The node (%s) is locked */" % str(node['id'])
+                print("/* The node ({0}) is locked */".format(str(node['id'])))
 
             if self.__opened_braces:
                 self.fd.write(level * self.padding_str)
@@ -415,14 +417,14 @@ class GvGen:
             properties = self.propertiesAsStringGet(node, props)
             self.fd.write(level * self.padding_str)
             self.fd.write(self.padding_str + "%s" % properties)
-            self.__opened_braces.append([node,level])
+            self.__opened_braces.append([node, level])
         else:
             # We grab appropriate properties
             properties = self.propertiesAsStringGet(node, props)
 
             # We get the latest opened elements
             if self.__opened_braces:
-                last_cluster,last_level = self.__opened_braces[-1]
+                last_cluster, last_level = self.__opened_braces[-1]
             else:
                 last_cluster = None
                 last_level = 0
@@ -436,14 +438,16 @@ class GvGen:
                     last_cluster_str = str(last_cluster['id'])
                 else:
                     last_cluster_str = 'None'
-                print "/* e[parent] = %s, last_cluster = %s, last_level = %d, opened_braces: %s */" % (parent_str, last_cluster_str,last_level,str(self.__opened_braces))
+                print("/* e[parent] = {0}, last_cluster = {1}, last_level = {2}, opened_braces: {3} */".format( # NOQA
+                    parent_str, last_cluster_str, last_level, str(self.__opened_braces)
+                ))
 
             # Write children/parent with properties
             if node['parent']:
                 if node['parent'] != last_cluster:
-                    while node['parent'] < last_cluster:
-                        last_cluster,last_level =  self.__opened_braces[-1]
-                        if  node['parent'] == last_cluster:
+                    while last_cluster and node['parent'] < last_cluster:
+                        last_cluster, last_level = self.__opened_braces[-1]
+                        if node['parent'] == last_cluster:
                             last_level += 1
                             # We browse any property to build a string
                             self.fd.write(last_level * self.padding_str)
@@ -455,7 +459,7 @@ class GvGen:
                             self.__opened_braces.pop()
                 else:
                     self.fd.write(level * self.padding_str)
-                    self.fd.write(self.padding_str + "node%d %s;\n" % (node['id'], properties) )
+                    self.fd.write(self.padding_str + "node%d %s;\n" % (node['id'], properties))
                     node['lock'] = 1
                     cl = self.collectUnlockedLeaves(node['parent'])
                     for l in cl:
@@ -472,7 +476,6 @@ class GvGen:
             else:
                 self.fd.write(self.padding_str + "node%d %s;\n" % (node['id'], properties))
                 node['lock'] = 1
-
 
     def browse(self, node, cb):
         """
@@ -552,7 +555,7 @@ class GvGen:
             self.fd.write("digraph G {\n")
 
             if self.options:
-                for key, value in self.options.iteritems():
+                for key, value in iteritems(self.options):
                     self.fd.write("%s=%s;" % (key, value))
                 self.fd.write("\n")
 
@@ -579,7 +582,7 @@ if __name__ == "__main__":
 
     graph.smart_mode = 1
 
-    graph.styleDefaultAppend("color","blue")
+    graph.styleDefaultAppend("color", "blue")
 
     parents = graph.newItem("Parents")
     father = graph.newItem("Bob", parents)
@@ -589,14 +592,14 @@ if __name__ == "__main__":
     child2 = graph.newItem("Eve", children)
     child3 = graph.newItem("Isaac", children)
     postman = graph.newItem("Postman")
-    graph.newLink(father,child1)
+    graph.newLink(father, child1)
     graph.newLink(child1, father)
     graph.newLink(father, child1)
-    graph.newLink(father,child2)
-    graph.newLink(mother,child2)
-    myl = graph.newLink(mother,child1)
-    graph.newLink(mother,child3)
-    graph.newLink(postman,child3,"Email is safer")
+    graph.newLink(father, child2)
+    graph.newLink(mother, child2)
+    myl = graph.newLink(mother, child1)
+    graph.newLink(mother, child3)
+    graph.newLink(postman, child3, "Email is safer")
     graph.newLink(parents, postman)    # Cluster link
 
     graph.propertyForeachLinksAppend(parents, "color", "blue")
@@ -616,6 +619,5 @@ if __name__ == "__main__":
     graph.styleAppend("Post", "style", "filled")
     graph.styleAppend("Post", "shape", "rectangle")
     graph.styleApply("Post", postman)
-
 
     graph.dot()
