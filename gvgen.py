@@ -102,10 +102,9 @@ class GvGen:
 
         # Parents should be sorted first
         if parent:
-                self.__nodes.insert(1, node)
-        else:
-                self.__nodes.append(node)
+                 self.__nodes.insert(1, self.__nodes.pop(self.__nodes.index(parent)))
 
+        self.__nodes.append(node)
         return node
 
     def __link_smart(self, link):
