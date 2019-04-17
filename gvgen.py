@@ -23,7 +23,7 @@ from __future__ import print_function
 from six import iteritems
 from sys import stdout
 
-gvgen_version = "0.9.1"
+gvgen_version = "0.9.2"
 
 debug = 0
 debug_tree_unroll = 0
@@ -63,7 +63,6 @@ class GvGen:
 
         # The graph has a legend
         if legend_name:
-            self.setOptions(rankdir="LR")
             self.legend = self.newItem(legend_name)
 
     def setOptions(self, **options):
@@ -362,22 +361,97 @@ class GvGen:
     #
 
     #
-    # For a good legend, the graph must have
-    # rankdir=LR property set.
+    # For a good legend, it has to be top to bottom whatever the rankdir
     #
+
     def legendAppend(self, legendstyle, legenddescr, labelin=None):
+        
+	# Determining if we need links according to rankdir
+        needLinks=True
+
+        if "rankdir" not in self.options:
+            needLinks=False
+        else:
+            if self.options['rankdir'] == "LR":
+                needLinks=False
+            elif self.options['rankdir'] == "RL":
+                needLinks=False
+            elif self.options['rankdir'] == "TB":
+                needLinks=True
+            elif self.options['rankdir'] == "BT":
+                needLinks=True
+
+	# if the label is in the shape
         if labelin:
+
+	    # creating shape with label
             item = self.newItem(legenddescr, self.legend)
             self.styleApply(legendstyle, item)
+
+	    # if links needed
+            if needLinks: 
+                
+		# we link all the nodes if they are here
+                if self.__has_children(self.legend):
+
+                    # remember the previous one
+                    previousNode = None
+                    for node in self.__has_children(self.legend):
+                        # and if they are more than two
+                        if previousNode:
+                            link=self.newLink(previousNode,node)
+                            self.propertyAppend(link, "dir", "none")
+                            self.propertyAppend(link, "style", "invis")
+
+                        #remembering node for next iteration
+                        previousNode=node
+            
         else:
+	    #creating shapes and labels separately
             style = self.newItem("", self.legend)
             descr = self.newItem(legenddescr, self.legend)
             self.styleApply(legendstyle, style)
             link = self.newLink(style, descr)
+
+	    #linking labels and shapes
             self.propertyAppend(link, "dir", "none")
             self.propertyAppend(link, "style", "invis")
             self.propertyAppend(descr, "shape", "plaintext")
+   
+            #if links needed
+            if needLinks: 
+	        # removing constraints
+                self.propertyAppend(link, "constraint", "false")
 
+                # we link all the nodes if they are here
+                if  self.__has_children(self.legend):
+                
+		   # remember the previous one
+                    previousNode = None
+                    previousLabel = None
+        
+                    for node in self.__has_children(self.legend):
+                        # if it has no text, meaning its a shape
+                        if node['properties']['label'] == "":
+                            # and if they are more than two
+                            if previousNode:
+                                link=self.newLink(previousNode,node)
+                                self.propertyAppend(link, "dir", "none")
+                                self.propertyAppend(link, "style", "invis")
+
+			    #remembering ...
+                            previousNode=node
+
+                        else:
+                            # else its labels 
+                            if previousLabel:
+                                link=self.newLink(previousLabel,node)
+                                self.propertyAppend(link, "dir", "none")
+                                self.propertyAppend(link, "style", "invis")
+
+			    #remembering previous label for next iteration
+                            previousLabel=node
+    
     def tree_debug(self, level, node, children):
         if children:
             print("(level:{0}) Eid:{1} has children ({2})").format(
