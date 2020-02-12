@@ -30,7 +30,7 @@ from __future__ import print_function
 from six import iteritems
 from sys import stdout
 
-gvgen_version = "0.9.2"
+gvgen_version = "1.0"
 
 debug = 0
 debug_tree_unroll = 0
